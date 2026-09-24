@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستەمێ تەواڤ - Al Raab Factory</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .print-container { background: white !important; color: black !important; border: none !important; box-shadow: none !important; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #333 !important; padding: 8px !important; text-align: center !important; font-size: 13px !important; color: black !important; }
+            th { background-color: #eee !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+    <!-- Header / Navbar (4 بەشێن سەرەکی) -->
+    <header id="main-header" class="bg-slate-800 border-b border-slate-700 shadow-md no-print">
+        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-lg font-bold text-xl">🏭</div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Al Raab Factory</h1>
+                    <p class="text-xs text-slate-400">سیستەمێ کۆنتڕۆلکرنا کارگەهێ</p>
+                </div>
+            </div>
+            <nav class="flex flex-wrap gap-2 bg-slate-900/60 p-1.5 rounded-xl border border-slate-700">
+                <button onclick="switchMainTab('workers-parent')" id="btn-main-workers-parent" class="main-tab px-4 py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white shadow">1. کارمەند</button>
+                <button onclick="switchMainTab('production')" id="btn-main-production" class="main-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-800">2. انتاج و فرۆتن</button>
+                <button onclick="switchMainTab('raw')" id="btn-main-raw" class="main-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-800">3. خام</button>
+                <button onclick="switchMainTab('products')" id="btn-main-products" class="main-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-800">4. مواد (مخازن)</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-8">
+
+        <!-- ================= بەشێ 1: کارمەند (دگەل 4 پشکێن ناڤخۆیی) ================= -->
+        <section id="section-workers-parent" class="space-y-6 main-section">
+            <div class="flex gap-2 border-b border-slate-700 pb-3 flex-wrap no-print">
+                <button onclick="switchSubTab('sub-list')" id="btn-sub-list" class="sub-tab px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition">١. کارمەند (لیست)</button>
+                <button onclick="switchSubTab('sub-attendance')" id="btn-sub-attendance" class="sub-tab px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">٢. رۆژێن نەهاتی</button>
+                <button onclick="switchSubTab('sub-advances')" id="btn-sub-advances" class="sub-tab px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">٣. سلف</button>
+                <button onclick="switchSubTab('sub-payroll')" id="btn-sub-payroll" class="sub-tab px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">٤. مووچە صافی</button>
+            </div>
+
+            <!-- Sub-Tab 1: کارمەند -->
+            <div id="sub-list" class="sub-content space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl no-print">
+                        <h2 id="worker-form-title" class="text-lg font-bold mb-4 text-indigo-400">➕ تۆمارکرنا کارمەندی</h2>
+                        <form id="worker-form" onsubmit="saveOrUpdateWorker(event)" class="space-y-4">
+                            <input type="text" id="w-name" placeholder="ناڤێ کارمەندی" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 text-sm">
+                            <input type="text" id="w-job" placeholder="جۆرێ کارێ (وەک: وستا)" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 text-sm">
+                            <input type="number" id="w-salary" placeholder="مووچەی مەهانە (د.ع)" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 text-sm">
+                            <input type="password" id="w-pin" placeholder="کۆدێ نەهێنی (PIN)" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 text-sm">
+                            <button type="submit" id="worker-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition text-sm">تۆمارکرنا کارمەندی</button>
+                        </form>
+                    </div>
+                    <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                        <div class="flex justify-between items-center flex-wrap gap-4">
+                            <h2 class="text-lg font-bold text-indigo-400">👥 لیستا کارمەندان و لینکێن تایبەت</h2>
+                            <input type="text" id="search-workers" placeholder="🔍 لێکۆلین..." oninput="renderWorkers()" class="w-full md:w-64 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 text-sm">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-700 text-slate-400 text-sm">
+                                        <th class="p-3">ناڤ</th>
+                                        <th class="p-3">کار</th>
+                                        <th class="p-3">مووچە</th>
+                                        <th class="p-3">PIN</th>
+                                        <th class="p-3">لینکێ تایبەت</th>
+                                        <th class="p-3 text-center no-print">کار</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="workers-table" class="divide-y divide-slate-700/50 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-Tab 2: رۆژێن نەهاتی -->
+            <div id="sub-attendance" class="sub-content hidden space-y-6">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                    <h2 class="text-lg font-bold text-indigo-400">📅 رۆژێن نەهاتی بۆ هر کرێکاری</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-700 text-slate-400 text-sm">
+                                    <th class="p-3">ناڤێ کارمەندی</th>
+                                    <th class="p-3">کار</th>
+                                    <th class="p-3">ژمارەیا رۆژێن نەهاتی</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendance-table" class="divide-y divide-slate-700/50 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-Tab 3: سلف -->
+            <div id="sub-advances" class="sub-content hidden space-y-6">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <h2 id="adv-form-title" class="text-lg font-bold mb-4 text-indigo-400">دانا سلفێ بۆ کرێکاری</h2>
+                    <form onsubmit="saveOrUpdateAdvance(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <select id="adv-worker-id" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 text-sm" required></select>
+                        <input type="number" id="adv-amount" placeholder="بڕێ سلفێ (د.ع)" required class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 text-sm">
+                        <input type="date" id="adv-date" required class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 text-sm">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-sm">تۆمارکرنا سلفێ</button>
+                    </form>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                    <h2 class="text-lg font-bold mb-4 text-indigo-400">لیستا هەمی سلفان</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-700 text-slate-400 text-sm">
+                                    <th class="p-3">ناڤ</th>
+                                    <th class="p-3">بڕ</th>
+                                    <th class="p-3">مێژوو</th>
+                                    <th class="p-3">کار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="advances-list" class="divide-y divide-slate-700/50 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-Tab 4: مووچە صافی -->
+            <div id="sub-payroll" class="sub-content hidden space-y-6">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex justify-between items-center flex-wrap gap-4 no-print">
+                        <h2 class="text-lg font-bold text-indigo-400">خلاسەیا مووچە صافی و حیساباتان</h2>
+                        <button onclick="printTableData('payroll-list', 'خلاسەیا مووچە صافی و حیساباتان')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold transition flex items-center gap-2 shadow text-sm">
+                            🖨️ چاپکرنا راپۆرتێ
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse border border-slate-700 text-sm">
+                            <thead>
+                                <tr class="bg-slate-900 text-slate-300">
+                                    <th class="p-3 border border-slate-700">ناڤ</th>
+                                    <th class="p-3 border border-slate-700">مووچەی بنەڕەتی</th>
+                                    <th class="p-3 border border-slate-700">رۆژێن نەهاتی (برین)</th>
+                                    <th class="p-3 border border-slate-700">سلف</th>
+                                    <th class="p-3 border border-slate-700">مووچەی صافی</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payroll-list" class="divide-y divide-slate-700 text-slate-200"></tbody>
+                            <tfoot id="payroll-foot"></tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= بەشێ 2: انتاج و فرۆتن ================= -->
+        <section id="section-production" class="main-section hidden space-y-6">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl space-y-6 print-container">
+                <div class="flex justify-between items-center flex-wrap gap-4 border-b border-slate-700 pb-4">
+                    <h2 class="text-xl font-bold text-indigo-400">📊 برێڤەبرنا بەرھەم و فرۆتنێ (انتاج)</h2>
+                    <div class="flex gap-2 no-print">
+                        <button onclick="printTableData('prodTableBody', 'لیستا انتاج و فرۆتنا بەرھەمان')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">🖨️ چاپکرنا خشتەیی</button>
+                        <button onclick="openCatModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">⚙️ گروپان (مارکە)</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
+                    <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
+                        <h3 class="font-bold text-emerald-400 text-sm" id="formTitle">➕ تۆمارکرنا بەرھەمێ نوو (زیادبوون)</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">بەروار:</label>
+                                <input type="date" id="prodDate" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">گروپ / مارکە:</label>
+                                <select id="prodGroup" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">جۆرێ بەرھەمی / ناڤ:</label>
+                                <input type="text" id="prodItem" placeholder="بۆ نموونە: پاکێتا نایلۆنی Soft Pack" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">ژمارە (مەقدار):</label>
+                                <input type="number" id="prodQty" placeholder="ژمارا دانان/کارتۆنان" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm">
+                            </div>
+                            <button class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition text-sm" id="saveProdBtn" onclick="addProductionRecord()">تۆمارکرنا بەرھەمی</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
+                        <h3 class="font-bold text-amber-400 text-sm">➖ تۆمارکرنا فرۆتنێ (دەرچوون ژ کوگەهێ)</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">گروپ / مارکە:</label>
+                                <select id="saleGroup" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm" onchange="updateSaleDropdown()"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">جۆرێ بەرھەمی:</label>
+                                <select id="saleItem" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm"></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">ژمارەیا فرۆتی:</label>
+                                <input type="number" id="saleQty" placeholder="ژمارا کو هاتیە فرۆتن" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm">
+                            </div>
+                            <button class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl transition text-sm" onclick="addSaleRecord()">تۆمارکرنا فرۆتنێ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print" id="statsGridContainer"></div>
+
+                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl no-print">
+                    <canvas id="productionChart" style="max-height: 250px;"></canvas>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center flex-wrap gap-4 no-print">
+                        <div class="flex gap-2 bg-slate-900 p-1 rounded-xl border border-slate-700">
+                            <button class="prod-tab-btn px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white transition" onclick="switchProdTab('prod', this)">لیستا بەرھەمان (انتاج)</button>
+                            <button class="prod-tab-btn px-4 py-2 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition" onclick="switchProdTab('sale', this)">لیستا فرۆتنێ</button>
+                        </div>
+                        <input type="text" id="prodSearchInput" placeholder="🔍 لێکۆلین د ناڤ انتاجی دا..." oninput="renderProdData()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 text-sm w-full md:w-64">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-900 text-slate-300 border-b border-slate-700">
+                                    <th class="p-3">بەروار</th>
+                                    <th class="p-3">گروپ / مارکە</th>
+                                    <th class="p-3">جۆرێ بەرھەمی</th>
+                                    <th class="p-3">ژمارە</th>
+                                    <th class="p-3 text-center no-print">کار</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prodTableBody" class="divide-y divide-slate-700/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= بەشێ 3: خام ================= -->
+        <section id="section-raw" class="main-section hidden space-y-6">
+            <div class="max-w-2xl mx-auto bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl space-y-6 print-container">
+                <div class="flex justify-between items-center no-print">
+                    <h2 class="text-xl font-bold text-indigo-400">📦 رێڤەبرنا خامێ کارگەهێ</h2>
+                    <button onclick="printTableData('rawTransactionTable', 'راپۆرتا مەوادێن خام')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">🖨️ چاپکرنا خام</button>
+                </div>
+                <h2 class="text-xl font-bold text-center text-indigo-400 hidden print-block">📦 رێڤەبرنا خامێ کارگەهێ</h2>
+                
+                <input type="hidden" id="editRawId" value="">
+
+                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-4 no-print">
+                    <h3 class="font-bold text-sm text-indigo-300 border-b border-slate-700 pb-2">تۆمارکرنا خامێ (+)</h3>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">ناڤێ خامێ:</label>
+                        <input type="text" id="rawNameInput" placeholder="بۆ نموونە: رۆلێ نایلۆنی" oninput="onRawNameInput(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm">
+                        <div id="rawWorkerInfo" class="text-xs text-indigo-400 font-bold mt-1"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">کیلۆ (کێش):</label>
+                        <input type="number" id="rawKilos" placeholder="چەند کیلو نە..." step="any" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">عدد:</label>
+                        <input type="number" id="rawAmount" placeholder="عددێ خامێ بنڤێسە..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm">
+                    </div>
+                    <button class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition text-sm shadow" id="rawSubmitBtn" onclick="addRawTransaction()">تۆمارکرنا خامێ</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 bg-slate-900 border border-slate-700 p-4 rounded-xl text-center">
+                    <div>
+                        <h4 class="text-xs text-slate-400 mb-1">کۆی گشتیێ کیلۆیان</h4>
+                        <p id="totalRawKilos" class="text-lg font-bold text-indigo-400">0 ک</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xs text-slate-400 mb-1">کۆی گشتیێ خام</h4>
+                        <p id="totalRawAdvance" class="text-lg font-bold text-rose-400">0</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-sm text-slate-300 mb-3">تۆمارێن دووماهیێ یێن خام</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-900 text-slate-300 border-b border-slate-700">
+                                    <th class="p-3">ناڤ</th>
+                                    <th class="p-3">کیلۆ</th>
+                                    <th class="p-3">عدد</th>
+                                    <th class="p-3">جۆر</th>
+                                    <th class="p-3 text-center no-print">چالاكی</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rawTransactionTable" class="divide-y divide-slate-700/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= بەشێ 4: مواد (مخازن بەش بەش) ================= -->
+        <section id="section-products" class="main-section hidden space-y-6">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl space-y-6 print-container">
+                <div class="flex justify-between items-center no-print">
+                    <h2 class="text-xl font-bold text-center text-indigo-400">سیستەمێ رێڤەبرنا مەوادان و مخازنی</h2>
+                    <button onclick="printTableData('whTableBody', 'راپۆرتا مخازنی و موادان')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">🖨️ چاپکرنا مخازنی</button>
+                </div>
+                <h2 class="text-xl font-bold text-center text-indigo-400 hidden print-block">سیستەمێ رێڤەبرنا مەوادان و مخازنی</h2>
+
+                <!-- Tabs Container بۆ جۆرێن موادان -->
+                <div id="warehouseTabsContainer" class="flex flex-wrap justify-center gap-2 bg-slate-900 p-3 rounded-xl border border-slate-700 no-print"></div>
+
+                <!-- تایتل و ناساندنا بەشێ چالاک -->
+                <div id="warehouseSectionHeader" class="bg-slate-900 border-r-4 border-indigo-500 p-4 rounded-xl shadow-sm">
+                    <h3 id="warehouseSectionTitle" class="text-lg font-bold text-indigo-300">بەشێ مخازنی</h3>
+                    <p id="warehouseSectionDesc" class="text-slate-400 text-xs mt-1">لێرە تو دشێی مەوادێن ڤی بەشی داخل بکەی.</p>
+                </div>
+
+                <!-- فۆڕما داخلکرنا مەوادی -->
+                <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl no-print">
+                    <h3 id="warehouseFormTitle" class="text-sm font-semibold mb-4 text-slate-200">مەوادەکێ نوی داخل بکە</h3>
+                    <form id="warehouseItemForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end" onsubmit="handleWarehouseSubmit(event)">
+                        <input type="hidden" id="warehouseEditIndex" value="-1">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">ناڤێ مەوادی:</label>
+                            <input type="text" id="whItemName" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm" placeholder="بۆ نموونە: پاکێت">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">دانە / بڕ:</label>
+                            <input type="number" id="whItemQty" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm" placeholder="بۆ نموونە: 100">
+                        </div>
+                        <div id="whKiloFieldWrapper">
+                            <label class="block text-xs text-slate-400 mb-1">کیلۆ بۆ هەر دانەیەکێ (Kg):</label>
+                            <input type="number" step="any" id="whItemKilo" value="0" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm" placeholder="بۆ نموونە: 0.5">
+                        </div>
+                        <button type="submit" id="whSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 px-4 rounded-xl transition font-semibold text-sm h-[38px]">مەوادی داخل بکە</button>
+                    </form>
+                </div>
+
+                <!-- لێگەڕان -->
+                <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex items-center no-print">
+                    <input type="text" id="whSearchInput" placeholder="🔍 لێگەڕان ل دووڤ ناڤێ مەوادی..." oninput="renderWarehouseTable(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 text-sm">
+                </div>
+
+                <!-- لیستا مەوادان -->
+                <div class="bg-slate-900 border border-slate-700 p-5 rounded-xl space-y-4">
+                    <h3 id="whTableTitle" class="text-sm font-semibold text-slate-200">لیستا مەوادان</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse text-sm">
+                            <thead>
+                                <tr id="whTableHeaderRow" class="bg-slate-800 text-slate-300 border-b border-slate-700"></tr>
+                            </thead>
+                            <tbody id="whTableBody" class="divide-y divide-slate-700/50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- پەنجەرا دەستکارییا گروپان (Modal) -->
+    <div class="modal hidden fixed inset-0 bg-black/50 justify-center items-center z-50 flex" id="catModal">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl w-96 space-y-4">
+            <h3 class="text-lg font-bold text-indigo-400">برێڤەبرنا گروپان (مارکە)</h3>
+            <input type="text" id="newCatInput" placeholder="ناڤێ گروپا نوو" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-slate-100 text-sm">
+            <button class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl font-bold transition text-sm" onclick="addNewCategory()">زیادکرنا گروپێ</button>
+            <div id="catListContainer" class="max-h-40 overflow-y-auto space-y-2 border border-slate-700 p-2 rounded-xl bg-slate-900 text-sm"></div>
+            <button class="w-full bg-rose-600 hover:bg-rose-500 text-white py-2 rounded-xl text-sm" onclick="closeCatModal()">گرتن</button>
+        </div>
+    </div>
+
+    <!-- ================= ڕوویێ تایبەت یێ کرێکاری (Dedicated Worker Page) ================= -->
+    <div id="direct-worker-view" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-2xl max-w-md w-full space-y-6">
+            <div class="text-center">
+                <div class="inline-block bg-indigo-600 text-white p-3 rounded-2xl shadow-lg font-bold text-2xl mb-2">⚡</div>
+                <h2 class="text-2xl font-bold text-indigo-400">سیستەمێ مووچەیێ کرێکاری</h2>
+                <p class="text-slate-400 text-sm mt-1">تکایە کۆدێ نەهێنی (PIN) بنڤیسە دا حیسابا خۆ ببینی</p>
+            </div>
+            
+            <div id="direct-login-box" class="space-y-4">
+                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl text-center">
+                    <span class="text-xs text-slate-400 block">ناڤێ کارمەندی</span>
+                    <span class="font-bold text-lg text-slate-100" id="direct-worker-name">...</span>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-300 mb-1">کۆدێ نەهێنی (PIN):</label>
+                    <input type="password" id="direct-pin" placeholder="کۆدێ خۆ بنڤیسە" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 text-sm">
+                </div>
+                <button onclick="directWorkerLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl transition text-sm">نیشاندانا مووچە و زانیاریێن من</button>
+            </div>
+
+            <div id="direct-dashboard" class="hidden space-y-4">
+                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl text-center">
+                    <h3 class="font-bold text-lg text-indigo-400" id="direct-w-dash-name"></h3>
+                    <p class="text-xs text-slate-400 mt-1" id="direct-w-dash-job"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl">
+                        <span class="text-slate-400 text-xs block">مووچەی بنەڕەتی</span>
+                        <span class="text-sm font-bold text-indigo-300" id="d-salary">0 د.ع</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl">
+                        <span class="text-slate-400 text-xs block">رۆژێن نەهاتنێ</span>
+                        <span class="text-sm font-bold text-rose-400" id="d-absent">0 رۆژ</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl col-span-2 border-emerald-500/30">
+                        <span class="text-slate-400 text-xs block">مووچەی صافی (یا وەرگرتنێ)</span>
+                        <span class="text-xl font-bold text-emerald-400" id="d-net">0 د.ع</span>
+                    </div>
+                </div>
+                <button onclick="location.reload()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-2.5 rounded-xl transition text-sm">داخستن / گەڕانەوە</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        let db = JSON.parse(localStorage.getItem('factory_db_v10')) || {
+            workers: [],
+            productions: [],
+            sales: [],
+            categories: ['Like', 'Saz', 'Sooz', 'Al-Mada', 'Nazeef', 'Aisan'],
+            rawTransactions: [],
+            warehouse: {}
+        };
+
+        let editingWorkerId = null;
+        let editingProdIndex = -1;
+        let currentProdTab = 'prod';
+        let myChart = null;
+
+        db.workers.forEach(w => {
+            if (!w.advances) w.advances = [];
+            if (w.absentDays === undefined) w.absentDays = 0;
+        });
+
+        function saveData() {
+            localStorage.setItem('factory_db_v10', JSON.stringify(db));
+        }
+
+        function formatNumber(num) {
+            return Number(num).toLocaleString('en-US');
+        }
+
+        function calculateNetSalary(worker) {
+            const absent = worker.absentDays || 0;
+            const dailyRate = worker.salary / 30;
+            const deduction = absent * dailyRate;
+            const salaryAfterAbsence = worker.salary - deduction;
+            
+            const totalAdvances = (worker.advances || []).reduce((sum, adv) => sum + adv.amount, 0);
+            let netSalary = Math.max(0, salaryAfterAbsence - totalAdvances);
+
+            return {
+                deduction: Math.round(deduction),
+                totalAdvances: totalAdvances,
+                netSalary: Math.round(netSalary)
+            };
+        }
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const workerId = urlParams.get('worker');
+            
+            if(document.getElementById('prodDate')) document.getElementById('prodDate').valueAsDate = new Date();
+            if(document.getElementById('adv-date')) document.getElementById('adv-date').value = new Date().toISOString().slice(0, 10);
+
+            if (workerId) {
+                document.getElementById('main-header').classList.add('hidden');
+                document.getElementById('main-app-container').classList.add('hidden');
+                document.getElementById('direct-worker-view').classList.remove('hidden');
+
+                const worker = db.workers.find(w => w.id === workerId);
+                if (worker) {
+                    document.getElementById('direct-worker-name').innerText = worker.name + " (" + worker.job + ")";
+                    window.currentDirectWorker = worker;
+                } else {
+                    document.getElementById('direct-worker-name').innerText = "کرێکار نەهاتە دیتن!";
+                    document.getElementById('direct-login-box').classList.add('hidden');
+                }
+            } else {
+                renderWorkers();
+                updateProdDropdowns();
+                renderProdData();
+                renderRawUI();
+                initWarehouseSystem();
+            }
+        };
+
+        function directWorkerLogin() {
+            const enteredPin = document.getElementById('direct-pin').value;
+            const worker = window.currentDirectWorker;
+            
+            if (!worker) return;
+
+            if (worker.pin !== enteredPin) {
+                alert('کۆدێ نەهێنی (PIN) خەلەتە!');
+                return;
+            }
+
+            const calc = calculateNetSalary(worker);
+
+            document.getElementById('direct-w-dash-name').innerText = "سڵاو، " + worker.name;
+            document.getElementById('direct-w-dash-job').innerText = "کار: " + worker.job;
+            document.getElementById('d-salary').innerText = formatNumber(worker.salary) + " د.ع";
+            document.getElementById('d-absent').innerText = (worker.absentDays || 0) + " رۆژ";
+            document.getElementById('d-net').innerText = formatNumber(calc.netSalary) + " د.ع";
+
+            document.getElementById('direct-login-box').classList.add('hidden');
+            document.getElementById('direct-dashboard').classList.remove('hidden');
+        }
+
+        // Switch Main Tabs
+        function switchMainTab(tabId) {
+            ['workers-parent', 'production', 'raw', 'products'].forEach(id => {
+                document.getElementById(`section-${id}`).classList.add('hidden');
+            });
+            document.querySelectorAll('.main-tab').forEach(btn => {
+                btn.className = "main-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-300 hover:text-white hover:bg-slate-800";
+            });
+
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            document.getElementById(`btn-main-${tabId}`).className = "main-tab px-4 py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white shadow";
+
+            if(tabId === 'production') { updateProdDropdowns(); renderProdData(); }
+            if(tabId === 'raw') renderRawUI();
+            if(tabId === 'products') initWarehouseSystem();
+        }
+
+        function switchSubTab(subId) {
+            ['list', 'attendance', 'advances', 'payroll'].forEach(id => {
+                document.getElementById(`sub-${id}`).classList.add('hidden');
+            });
+            document.querySelectorAll('.sub-tab').forEach(btn => {
+                btn.className = "sub-tab px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+            });
+
+            document.getElementById(subId).classList.remove('hidden');
+            document.getElementById(`btn-${subId}`).className = "sub-tab px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition";
+
+            if(subId === 'sub-list') renderWorkers();
+            if(subId === 'sub-attendance') renderAttendance();
+            if(subId === 'sub-advances') renderAdvancesTab();
+            if(subId === 'sub-payroll') renderPayroll();
+        }
+
+        // عام بۆ چاپکرنا خشتەیان (Print Table Function)
+        function printTableData(elementId, reportTitle) {
+            let tableHTML = document.getElementById(elementId).closest('table').outerHTML;
+            let printWindow = window.open('', '', 'height=700,width=900');
+            printWindow.document.write('<html lang="ku" dir="rtl"><head><title>' + reportTitle + ' - Al Raab Factory</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: Tahoma, sans-serif; padding: 30px; direction: rtl; color: #000; }');
+            printWindow.document.write('.header-print { text-align: center; border-bottom: 2px solid #222; padding-bottom: 10px; margin-bottom: 20px; }');
+            printWindow.document.write('.header-print h2 { font-size: 24px; margin: 0; padding: 0; }');
+            printWindow.document.write('.header-print p { font-size: 14px; color: #555; margin-top: 5px; }');
+            printWindow.document.write('table { width: 100%; border-collapse: collapse; font-size: 14px; }');
+            printWindow.document.write('th, td { border: 1px solid #444; padding: 10px; text-align: center; }');
+            printWindow.document.write('th { background-color: #eee; font-weight: bold; }');
+            printWindow.document.write('tr:nth-child(even) { background-color: #f9f9f9; }');
+            printWindow.document.write('.no-print { display: none !important; }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write('<div class="header-print">');
+            printWindow.document.write('<h2>Al Raab Factory</h2>');
+            printWindow.document.write('<p>' + reportTitle + ' - مێژوو: ' + new Date().toLocaleDateString('en-GB') + '</p>');
+            printWindow.document.write('</div>');
+            printWindow.document.write(tableHTML);
+            printWindow.document.write('</body></html>');
+            
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+
+        function printPayroll() {
+            printTableData('payroll-list', 'خلاسەیا مووچە صافی و حیساباتان');
+        }
+
+        // Workers Functions
+        function saveOrUpdateWorker(e) {
+            e.preventDefault();
+            const name = document.getElementById('w-name').value;
+            const job = document.getElementById('w-job').value;
+            const salary = parseFloat(document.getElementById('w-salary').value);
+            const pin = document.getElementById('w-pin').value;
+
+            if (editingWorkerId === null) {
+                db.workers.push({ id: 'W_' + Date.now(), name, job, salary, pin, absentDays: 0, advances: [] });
+                alert('کرێکار هاتە تۆمارکرن!');
+            } else {
+                const w = db.workers.find(item => item.id === editingWorkerId);
+                if (w) { w.name = name; w.job = job; w.salary = salary; w.pin = pin; }
+                alert('زانیاری هاتنە نووژەنکرن!');
+                editingWorkerId = null;
+                document.getElementById('worker-form-title').innerText = "➕ تۆمارکرنا کارمەندی";
+                document.getElementById('worker-submit-btn').innerText = "تۆمارکرنا کارمەندی";
+            }
+            saveData();
+            e.target.reset();
+            renderWorkers();
+        }
+
+        function editWorker(id) {
+            const w = db.workers.find(item => item.id === id);
+            if (!w) return;
+            document.getElementById('w-name').value = w.name;
+            document.getElementById('w-job').value = w.job;
+            document.getElementById('w-salary').value = w.salary;
+            document.getElementById('w-pin').value = w.pin;
+            editingWorkerId = id;
+            document.getElementById('worker-form-title').innerText = "✏️ دەستکاری: " + w.name;
+            document.getElementById('worker-submit-btn').innerText = "نووژەنکرن (Update)";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteWorker(id) {
+            db.workers = db.workers.filter(w => w.id !== id);
+            saveData();
+            renderWorkers();
+        }
+
+        function renderWorkers() {
+            const tbody = document.getElementById('workers-table');
+            if(!tbody) return;
+            tbody.innerHTML = db.workers.length === 0 ? `<tr><td colspan="6" class="text-center py-4 text-slate-500">چ کارمەند نینن.</td></tr>` : '';
+            const baseUrl = window.location.origin + window.location.pathname;
+
+            db.workers.forEach(w => {
+                const workerLink = `${baseUrl}?worker=${w.id}`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-3 font-medium">${w.name}</td>
+                        <td class="p-3 text-slate-300">${w.job}</td>
+                        <td class="p-3 text-emerald-400 font-bold">${formatNumber(w.salary)} د.ع</td>
+                        <td class="p-3 font-mono text-indigo-400">${w.pin}</td>
+                        <td class="p-3 flex gap-2 items-center">
+                            <button onclick="navigator.clipboard.writeText('${workerLink}').then(() => alert('لینک هاتە کۆپیکرن!'))" class="bg-indigo-600/20 text-indigo-400 px-3 py-1 rounded text-xs">📋 کۆپی</button>
+                            <a href="${workerLink}" target="_blank" class="bg-slate-700 text-slate-200 px-3 py-1 rounded text-xs">🔗 ڤەکرن</a>
+                        </td>
+                        <td class="p-3 text-center flex gap-2 justify-center">
+                            <button onclick="editWorker('${w.id}')" class="text-blue-400 text-xs">دەستکاری</button>
+                            <button onclick="deleteWorker('${w.id}')" class="text-rose-400 text-xs">ژێبرن</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function renderAttendance() {
+            const tbody = document.getElementById('attendance-table');
+            if(!tbody) return;
+            tbody.innerHTML = db.workers.length === 0 ? `<tr><td colspan="3" class="text-center py-4 text-slate-500">چ کارمەند نینن.</td></tr>` : '';
+            db.workers.forEach(w => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-3 font-medium">${w.name}</td>
+                        <td class="p-3 text-slate-300">${w.job}</td>
+                        <td class="p-3">
+                            <input type="number" min="0" value="${w.absentDays || 0}" onchange="updateAbsent('${w.id}', this.value)" class="bg-slate-900 border border-slate-700 p-2 rounded-xl w-32 text-center font-bold text-rose-400 text-sm"> رۆژ
+                        </td>
+                    </tr>`;
+            });
+        }
+        function updateAbsent(id, val) {
+            const w = db.workers.find(item => item.id === id);
+            if(w) { w.absentDays = parseInt(val) || 0; saveData(); }
+        }
+
+        function renderAdvancesTab() {
+            const select = document.getElementById('adv-worker-id');
+            if(!select) return;
+            select.innerHTML = db.workers.length === 0 ? `<option value="">هیچ کارمەند نینە</option>` : '';
+            db.workers.forEach(w => { select.innerHTML += `<option value="${w.id}">${w.name} (${w.job})</option>`; });
+
+            const tbody = document.getElementById('advances-list');
+            tbody.innerHTML = '';
+            let allAdv = [];
+            db.workers.forEach(w => {
+                if(w.advances) {
+                    w.advances.forEach((adv, idx) => {
+                        allAdv.push({ workerId: w.id, workerName: w.name, amount: adv.amount, date: adv.date, index: idx });
+                    });
+                }
+            });
+            if(allAdv.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-500">چ سلفەک نینە.</td></tr>`; return; }
+            allAdv.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-3 font-medium">${item.workerName}</td>
+                        <td class="p-3 text-amber-400 font-bold">${formatNumber(item.amount)} د.ع</td>
+                        <td class="p-3 text-slate-400">${item.date}</td>
+                        <td class="p-3"><button onclick="deleteAdvance('${item.workerId}', ${item.index})" class="text-rose-400 text-xs">ژێبرن</button></td>
+                    </tr>`;
+            });
+        }
+        function saveOrUpdateAdvance(e) {
+            e.preventDefault();
+            const wId = document.getElementById('adv-worker-id').value;
+            const amount = parseFloat(document.getElementById('adv-amount').value);
+            const date = document.getElementById('adv-date').value;
+            const w = db.workers.find(item => item.id === wId);
+            if(w) {
+                if(!w.advances) w.advances = [];
+                w.advances.push({ amount, date });
+                saveData();
+                alert('سلف هاتە تۆمارکرن!');
+                e.target.reset();
+                document.getElementById('adv-date').value = new Date().toISOString().slice(0, 10);
+                renderAdvancesTab();
+            }
+        }
+        function deleteAdvance(wId, idx) {
+            const w = db.workers.find(item => item.id === wId);
+            if(w && w.advances) { w.advances.splice(idx, 1); saveData(); renderAdvancesTab(); }
+        }
+
+        function renderPayroll() {
+            const tbody = document.getElementById('payroll-list');
+            const tfoot = document.getElementById('payroll-foot');
+            if(!tbody || !tfoot) return;
+            tbody.innerHTML = ''; tfoot.innerHTML = '';
+            if(db.workers.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-500">چ داتا نینە.</td></tr>`; return; }
+
+            let tBase = 0, tDed = 0, tAdv = 0, tNet = 0;
+            db.workers.forEach(w => {
+                const calc = calculateNetSalary(w);
+                const totalAdv = (w.advances || []).reduce((s, a) => s + a.amount, 0);
+                tBase += w.salary; tDed += calc.deduction; tAdv += totalAdv; tNet += calc.netSalary;
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-700">
+                        <td class="p-3 border border-slate-700 font-medium">${w.name}</td>
+                        <td class="p-3 border border-slate-700 text-slate-300">${formatNumber(w.salary)} د.ع</td>
+                        <td class="p-3 border border-slate-700 text-rose-400">${w.absentDays || 0} رۆژ (-${formatNumber(calc.deduction)})</td>
+                        <td class="p-3 border border-slate-700 text-amber-400">${formatNumber(totalAdv)} د.ع</td>
+                        <td class="p-3 border border-slate-700 text-emerald-400 font-bold">${formatNumber(calc.netSalary)} د.ع</td>
+                    </tr>`;
+            });
+            tfoot.innerHTML = `
+                <tr class="bg-slate-900 font-bold text-slate-100 border-t-2 border-slate-600">
+                    <td class="p-3 border border-slate-700">کۆیا گشتی</td>
+                    <td class="p-3 border border-slate-700">${formatNumber(tBase)} د.ع</td>
+                    <td class="p-3 border border-slate-700 text-rose-400">(-${formatNumber(tDed)})</td>
+                    <td class="p-3 border border-slate-700 text-amber-400">${formatNumber(tAdv)} د.ع</td>
+                    <td class="p-3 border border-slate-700 text-emerald-400 text-base">${formatNumber(tNet)} د.ع</td>
+                </tr>`;
+        }
+
+        // ================= PRODUCTION & SALES LOGIC =================
+        function updateProdDropdowns() {
+            let pSel = document.getElementById('prodGroup');
+            let sSel = document.getElementById('saleGroup');
+            if(!pSel || !sSel) return;
+            
+            let pV = pSel.value, sV = sSel.value;
+            pSel.innerHTML = ''; sSel.innerHTML = '';
+            
+            db.categories.forEach(c => {
+                pSel.innerHTML += `<option value="${c}">${c}</option>`;
+                sSel.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+
+            if(db.categories.includes(pV)) pSel.value = pV;
+            if(db.categories.includes(sV)) sSel.value = sV;
+            updateSaleDropdown();
+        }
+
+        function updateSaleDropdown() {
+            let g = document.getElementById('saleGroup').value;
+            let saleSel = document.getElementById('saleItem');
+            if(!saleSel) return;
+            let cur = saleSel.value;
+            let items = [...new Set(db.productions.filter(p => p.group === g).map(p => p.item))];
+            
+            saleSel.innerHTML = '';
+            if(items.length === 0) { saleSel.innerHTML = '<option value="">چ بەرھەم ل کوگەهێ نینن</option>'; return; }
+            items.forEach(i => { saleSel.innerHTML += `<option value="${i}">${i}</option>`; });
+            if(items.includes(cur)) saleSel.value = cur;
+        }
+
+        function switchProdTab(tab, el) {
+            currentProdTab = tab;
+            document.querySelectorAll('.prod-tab-btn').forEach(b => {
+                b.className = "prod-tab-btn px-4 py-2 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition";
+            });
+            el.className = "prod-tab-btn px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white transition";
+            renderProdData();
+        }
+
+        function renderProdData() {
+            let tb = document.getElementById('prodTableBody');
+            if(!tb) return;
+            tb.innerHTML = '';
+            let active = (currentProdTab === 'prod') ? db.productions : db.sales;
+            let q = document.getElementById('prodSearchInput').value.toLowerCase();
+
+            let filtered = active.map((it, idx) => ({...it, idx})).filter(it => (it.group||'').toLowerCase().includes(q) || it.item.toLowerCase().includes(q) || it.date.includes(q));
+
+            if(filtered.length === 0) {
+                tb.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-500">چ زانیاری نینە.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(it => {
+                let act = (currentProdTab === 'prod') ? 
+                    `<button onclick="editProd(${it.idx})" class="text-blue-400 text-xs font-bold mr-2">دەستکاری</button><button onclick="delProdItem('production', ${it.idx})" class="text-rose-400 text-xs font-bold">ژێبرن</button>` : 
+                    `<button onclick="delProdItem('sale', ${it.idx})" class="text-rose-400 text-xs font-bold">ژێبرن</button>`;
+                
+                tb.innerHTML += `
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-3 text-slate-300">${it.date}</td>
+                        <td class="p-3 font-bold">${it.group || db.categories[0]}</td>
+                        <td class="p-3">${it.item}</td>
+                        <td class="p-3 text-indigo-300 font-bold">${formatNumber(it.qty)}</td>
+                        <td class="p-3 text-center no-print">${act}</td>
+                    </tr>`;
+            });
+
+            calculateProdTotals();
+            updateChart();
+        }
+
+        function calculateProdTotals() {
+            let container = document.getElementById('statsGridContainer');
+            if(!container) return;
+            container.innerHTML = '';
+
+            let tP = 0, tS = 0, tN = 0;
+            db.categories.forEach(cat => {
+                let p = db.productions.filter(x => x.group === cat).reduce((s, x) => s + x.qty, 0);
+                let s = db.sales.filter(x => x.group === cat).reduce((sum, x) => sum + x.qty, 0);
+                let net = p - s;
+                tP += p; tS += s; tN += net;
+
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-center">
+                        <span class="text-xs text-slate-400">گروپێ ${cat}</span>
+                        <span class="text-lg font-bold text-indigo-400 mt-1 block">${formatNumber(net)}</span>
+                    </div>`;
+            });
+
+            container.innerHTML += `
+                <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-center">
+                    <span class="text-xs text-slate-400">گشتیێ انتاجی</span>
+                    <span class="text-lg font-bold text-emerald-400 mt-1 block">${formatNumber(tP)}</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-center">
+                    <span class="text-xs text-slate-400">گشتیێ فرۆتنێ</span>
+                    <span class="text-lg font-bold text-amber-400 mt-1 block">${formatNumber(tS)}</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl text-center col-span-2">
+                    <span class="text-xs text-slate-400">گشتیێ کۆگەهێ (Net Stock)</span>
+                    <span class="text-xl font-bold text-emerald-400 mt-1 block">${formatNumber(tN)}</span>
+                </div>`;
+        }
+
+        function addProductionRecord() {
+            let date = document.getElementById('prodDate').value;
+            let group = document.getElementById('prodGroup').value;
+            let item = document.getElementById('prodItem').value.trim();
+            let qty = Number(document.getElementById('prodQty').value);
+
+            if(!date || !item || !qty || qty <= 0) { alert('هیڤییە داتایێن دروست پڕ بکە!'); return; }
+
+            if(editingProdIndex === -1) {
+                db.productions.push({ date, group, item, qty });
+                alert('بەرھەم هاتە تۆمارکرن!');
+            } else {
+                db.productions[editingProdIndex] = { date, group, item, qty };
+                alert('بەرھەم هاتە نووژەنکرن!');
+                editingProdIndex = -1;
+                document.getElementById('formTitle').innerText = "➕ تۆمارکرنا بەرھەمێ نوو (زیادبوون)";
+                document.getElementById('saveProdBtn').innerText = "تۆمارکرنا بەرھەمی";
+            }
+            saveData();
+            document.getElementById('prodItem').value = '';
+            document.getElementById('prodQty').value = '';
+            renderProdData();
+        }
+
+        function addSaleRecord() {
+            let date = document.getElementById('prodDate').value;
+            let group = document.getElementById('saleGroup').value;
+            let item = document.getElementById('saleItem').value;
+            let qty = Number(document.getElementById('saleQty').value);
+
+            if(!item || !qty || qty <= 0) { alert('هیڤییە ژمارەکا دروست پڕ بکە!'); return; }
+
+            let totalP = db.productions.filter(p => p.group === group && p.item === item).reduce((s, p) => s + p.qty, 0);
+            let totalS = db.sales.filter(s => s.group === group && s.item === item).reduce((s, x) => s + x.qty, 0);
+            let available = totalP - totalS;
+
+            if(qty > available) {
+                alert(`ناتوانی فرۆتنێ ئەنجام دەی! مەقدارێ موجود ل کوگەهێ (${available}) دانە.`);
+                return;
+            }
+
+            db.sales.push({ date, group, item, qty });
+            saveData();
+            alert('فرۆتن هاتە تۆمارکرن!');
+            document.getElementById('saleQty').value = '';
+            renderProdData();
+        }
+
+        function editProd(idx) {
+            let it = db.productions[idx];
+            document.getElementById('prodDate').value = it.date;
+            document.getElementById('prodGroup').value = it.group || db.categories[0];
+            document.getElementById('prodItem').value = it.item;
+            document.getElementById('prodQty').value = it.qty;
+            editingProdIndex = idx;
+            document.getElementById('formTitle').innerText = "✏️ دەستکاری: " + it.item;
+            document.getElementById('saveProdBtn').innerText = "نووکرن (Update)";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function delProdItem(type, idx) {
+            if(type === 'production') { db.productions.splice(idx, 1); }
+            else { db.sales.splice(idx, 1); }
+            saveData();
+            renderProdData();
+        }
+
+        function openCatModal() { document.getElementById('catModal').classList.remove('hidden'); renderCatList(); }
+        function closeCatModal() { document.getElementById('catModal').classList.add('hidden'); updateProdDropdowns(); }
+        
+        function renderCatList() {
+            let container = document.getElementById('catListContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            db.categories.forEach((cat, i) => {
+                container.innerHTML += `<div class="flex justify-between items-center bg-slate-800 p-2 rounded-lg"><span>${cat}</span><button onclick="delCat(${i})" class="text-rose-400 text-xs">ژێبرن</button></div>`;
+            });
+        }
+
+        function addNewCategory() {
+            let n = document.getElementById('newCatInput').value.trim();
+            if(n && !db.categories.includes(n)) {
+                db.categories.push(n);
+                saveData();
+                document.getElementById('newCatInput').value = '';
+                renderCatList();
+                updateProdDropdowns();
+            }
+        }
+
+        function delCat(i) {
+            if(db.categories.length > 1) {
+                db.categories.splice(i, 1);
+                saveData();
+                renderCatList();
+                updateProdDropdowns();
+            }
+        }
+
+        function updateChart() {
+            let pSum = db.categories.map(g => db.productions.filter(p => p.group === g).reduce((s, p) => s + p.qty, 0));
+            let sSum = db.categories.map(g => db.sales.filter(s => s.group === g).reduce((s, x) => s + x.qty, 0));
+            let ctx = document.getElementById('productionChart');
+            if(!ctx) return;
+            
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: db.categories,
+                    datasets: [
+                        { label: 'انتاج (مایە)', data: pSum, backgroundColor: 'rgba(39, 174, 96, 0.7)' },
+                        { label: 'فرۆتن', data: sSum, backgroundColor: 'rgba(230, 126, 34, 0.7)' }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // ================= RAW MATERIALS LOGIC =================
+        function getRawTotal(name) {
+            if (!name) return 0;
+            let clean = name.trim().toLowerCase();
+            let total = 0;
+            db.rawTransactions.forEach(t => {
+                if (t.name.trim().toLowerCase() === clean) total += t.amount;
+            });
+            return total;
+        }
+
+        function onRawNameInput(val) {
+            let info = document.getElementById('rawWorkerInfo');
+            if(!info) return;
+            let tot = getRawTotal(val);
+            info.innerText = val.trim() ? `کۆی گشتیێ ڤی مۆادی ل کوگەهێ: ${formatNumber(tot)}` : "";
+        }
+
+        function addRawTransaction() {
+            let name = document.getElementById('rawNameInput').value.trim();
+            let kilos = parseFloat(document.getElementById('rawKilos').value) || 0;
+            let amount = parseFloat(document.getElementById('rawAmount').value);
+            let editId = document.getElementById('editRawId').value;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert("بخوازە ناڤەکی دروست و عددەک دروست بنڤیسە!");
+                return;
+            }
+
+            if (editId) {
+                let item = db.rawTransactions.find(t => t.id == editId);
+                if (item) { item.name = name; item.kilos = kilos; item.amount = amount; }
+                document.getElementById('editRawId').value = '';
+                document.getElementById('rawSubmitBtn').innerText = "تۆمارکرنا خامێ";
+            } else {
+                db.rawTransactions.push({ id: Date.now(), name, kilos, amount });
+            }
+
+            saveData();
+            renderRawUI();
+            clearRawForm();
+        }
+
+        function editRawTransaction(id) {
+            let t = db.rawTransactions.find(item => item.id == id);
+            if (!t) return;
+            document.getElementById('editRawId').value = t.id;
+            document.getElementById('rawNameInput').value = t.name;
+            document.getElementById('rawKilos').value = t.kilos;
+            document.getElementById('rawAmount').value = t.amount;
+            document.getElementById('rawSubmitBtn').innerText = "نووکرنا تۆمارێ (Update)";
+            onRawNameInput(t.name);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteRawTransaction(id) {
+            db.rawTransactions = db.rawTransactions.filter(t => t.id !== id);
+            saveData();
+            renderRawUI();
+        }
+
+        function renderRawUI() {
+            let tbody = document.getElementById('rawTransactionTable');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            let totalAdv = 0, totalKilos = 0;
+
+            if (db.rawTransactions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-500">چ تۆمارەک نینە.</td></tr>`;
+            }
+
+            db.rawTransactions.forEach(t => {
+                totalAdv += t.amount;
+                totalKilos += t.kilos;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-3 font-medium">${t.name}</td>
+                        <td class="p-3 text-indigo-300">${formatNumber(t.kilos)} ک</td>
+                        <td class="p-3 text-emerald-400 font-bold">${formatNumber(t.amount)}</td>
+                        <td class="p-3 text-rose-400 text-xs font-bold">خام (+)</td>
+                        <td class="p-3 text-center flex gap-2 justify-center no-print">
+                            <button onclick="editRawTransaction(${t.id})" class="text-blue-400 text-xs">دەستکاری</button>
+                            <button onclick="deleteRawTransaction(${t.id})" class="text-rose-400 text-xs">ژێبرن</button>
+                        </td>
+                    </tr>`;
+            });
+
+            document.getElementById('totalRawAdvance').innerText = formatNumber(totalAdv);
+            document.getElementById('totalRawKilos').innerText = formatNumber(totalKilos) + " ک";
+        }
+
+        function clearRawForm() {
+            document.getElementById('rawNameInput').value = '';
+            document.getElementById('rawKilos').value = '';
+            document.getElementById('rawAmount').value = '';
+            document.getElementById('rawWorkerInfo').innerText = '';
+            document.getElementById('editRawId').value = '';
+            document.getElementById('rawSubmitBtn').innerText = "تۆمارکرنا خامێ";
+        }
+
+        // ================= WAREHOUSE / MODUELS LOGIC (مۆاد / مخازن) =================
+        const warehouseSections = [
+            { id: 'nylon_malon', name: 'نایلون ملون', desc: 'لێرە تو دشێی مەوادێن نایلون ملون داخل بکەی.', hasKilo: true },
+            { id: 'nylon_transparent', name: 'نایلون شفاف', desc: 'لێرە تو دشێی مەوادێن نایلون شفاف داخل بکەی.', hasKilo: true },
+            { id: 'nylon_mortab', name: 'نایلون مرطب', desc: 'لێرە تو دشێی مەوادێن نایلون مرطب داخل بکەی.', hasKilo: true },
+            { id: 'nylon_sahb_auto', name: 'نایلون سحب اوتو', desc: 'لێرە تو دشێی مەوادێن نایلون سحب اوتو داخل بکەی.', hasKilo: true },
+            { id: 'zt_fold', name: 'ورق زت فولد & دسبينسر', desc: 'لێرە تو دشێی ورق زت فولد و دسبينسر داخل بکەی.', hasKilo: true },
+            { id: 'nylon_shrink', name: 'نایلون شرينك', desc: 'لێرە تو دشێی مەوادێن نایلون شرينك داخل بکەی.', hasKilo: true },
+            { id: 'carton', name: 'کارتۆن', desc: 'لێرە تو دشێی مەوادێن کارتۆن داخل بکەی.', hasKilo: false }
+        ];
+
+        let currentWhSecId = warehouseSections[0].id;
+
+        function initWarehouseSystem() {
+            renderWhTabs();
+            switchWhSection(currentWhSecId);
+        }
+
+        function renderWhTabs() {
+            const container = document.getElementById('warehouseTabsContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            warehouseSections.forEach(sec => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isActive = sec.id === currentWhSecId;
+                btn.className = isActive ? 
+                    "px-3 py-1.5 rounded-lg font-semibold shadow text-xs bg-indigo-600 text-white" : 
+                    "px-3 py-1.5 rounded-lg font-medium text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+                btn.innerText = sec.name;
+                btn.onclick = () => switchWhSection(sec.id);
+                container.appendChild(btn);
+            });
+        }
+
+        function switchWhSection(secId) {
+            currentWhSecId = secId;
+            document.getElementById('whSearchInput').value = '';
+            resetWhForm();
+            renderWarehouseTable();
+            renderWhTabs();
+
+            const sec = warehouseSections.find(s => s.id === secId);
+            document.getElementById('warehouseSectionTitle').innerText = `بەشێ: ${sec.name}`;
+            document.getElementById('warehouseSectionDesc').innerText = sec.desc;
+            document.getElementById('whTableTitle').innerText = `لیستا مەوادێن ${sec.name}`;
+
+            const kiloWrapper = document.getElementById('whKiloFieldWrapper');
+            const formGrid = document.getElementById('warehouseItemForm');
+            if (sec.hasKilo) {
+                kiloWrapper.style.display = 'block';
+                formGrid.className = "grid grid-cols-1 md:grid-cols-4 gap-4 items-end";
+            } else {
+                kiloWrapper.style.display = 'none';
+                formGrid.className = "grid grid-cols-1 md:grid-cols-3 gap-4 items-end";
+            }
+
+            const headerRow = document.getElementById('whTableHeaderRow');
+            if (sec.hasKilo) {
+                headerRow.innerHTML = `
+                    <th class="p-3 border border-slate-700">ناڤێ مەوادی</th>
+                    <th class="p-3 border border-slate-700">دانە / بڕ</th>
+                    <th class="p-3 border border-slate-700">مجموعێ کیلۆیان (Kg)</th>
+                    <th class="p-3 border border-slate-700 text-center no-print">کێمکرنا برڕی</th>
+                    <th class="p-3 border border-slate-700 text-center no-print">کردار</th>
+                `;
+            } else {
+                headerRow.innerHTML = `
+                    <th class="p-3 border border-slate-700">ناڤێ مەوادی</th>
+                    <th class="p-3 border border-slate-700">دانە / بڕ</th>
+                    <th class="p-3 border border-slate-700 text-center no-print">کێمکرنا برڕی</th>
+                    <th class="p-3 border border-slate-700 text-center no-print">کردار</th>
+                `;
+            }
+        }
+
+        function handleWarehouseSubmit(e) {
+            e.preventDefault();
+            let name = document.getElementById('whItemName').value.trim();
+            let qty = parseInt(document.getElementById('whItemQty').value);
+            let sec = warehouseSections.find(s => s.id === currentWhSecId);
+            let kilo = sec.hasKilo ? parseFloat(document.getElementById('whItemKilo').value) || 0 : 0;
+            let editIdx = parseInt(document.getElementById('warehouseEditIndex').value);
+
+            if(!db.warehouse[currentWhSecId]) db.warehouse[currentWhSecId] = [];
+            let whList = db.warehouse[currentWhSecId];
+
+            if(name && !isNaN(qty)) {
+                if(editIdx > -1) {
+                    whList[editIdx].name = name;
+                    whList[editIdx].qty = qty;
+                    if(sec.hasKilo) whList[editIdx].singleKilo = kilo;
+                    resetWhForm();
+                    alert('مەواد هاتە نووژەنکرن!');
+                } else {
+                    let existing = whList.find(i => i.name.toLowerCase() === name.toLowerCase());
+                    if(existing) {
+                        existing.qty += qty;
+                        if(sec.hasKilo && kilo > 0) existing.singleKilo = kilo;
+                    } else {
+                        if(sec.hasKilo) whList.push({ name, qty, singleKilo: kilo });
+                        else whList.push({ name, qty });
+                    }
+                    document.getElementById('whItemName').value = '';
+                    document.getElementById('whItemQty').value = '';
+                    if(sec.hasKilo) document.getElementById('whItemKilo').value = '0';
+                    alert('مەواد هاتە داخلکرن!');
+                }
+                saveData();
+                renderWarehouseTable(document.getElementById('whSearchInput').value);
+            }
+        }
+
+        function renderWarehouseTable(filter = '') {
+            let tbody = document.getElementById('whTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if(!db.warehouse[currentWhSecId]) db.warehouse[currentWhSecId] = [];
+            let whList = db.warehouse[currentWhSecId];
+            let sec = warehouseSections.find(s => s.id === currentWhSecId);
+
+            let filtered = whList.map((item, idx) => ({...item, idx})).filter(item => item.name.toLowerCase().includes(filter.toLowerCase()));
+
+            if(filtered.length === 0) {
+                let colSpan = sec.hasKilo ? 5 : 4;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center p-4 text-slate-500">هیچ مەوادەک نەهاتە دیتن</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                let totalKilo = sec.hasKilo ? (item.qty * (item.singleKilo || 0)).toFixed(2) : 0;
+                let qtyColor = item.qty <= 5 ? 'text-rose-400 font-bold' : 'text-slate-200';
+
+                if (sec.hasKilo) {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-700/30">
+                            <td class="p-3 border border-slate-700 font-medium">${item.name}</td>
+                            <td class="p-3 border border-slate-700 ${qtyColor}">${formatNumber(item.qty)} دانە</td>
+                            <td class="p-3 border border-slate-700 text-indigo-300 font-semibold">${totalKilo} Kg</td>
+                            <td class="p-3 border border-slate-700 text-center no-print">
+                                <div class="flex justify-center items-center gap-2">
+                                    <input type="number" id="wh_deduct_${item.idx}" min="1" value="1" class="w-16 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-center text-xs text-slate-100">
+                                    <button onclick="decreaseWhQty(${item.idx})" class="bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1 rounded text-xs">کێم بکە</button>
+                                </div>
+                            </td>
+                            <td class="p-3 border border-slate-700 text-center no-print">
+                                <button onclick="editWhItem(${item.idx})" class="text-blue-400 text-xs mr-2">دەستکاری</button>
+                                <button onclick="deleteWhItem(${item.idx})" class="text-rose-400 text-xs">ژێبرن</button>
+                            </td>
+                        </tr>`;
+                } else {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-700/30">
+                            <td class="p-3 border border-slate-700 font-medium">${item.name}</td>
+                            <td class="p-3 border border-slate-700 ${qtyColor}">${formatNumber(item.qty)} دانە</td>
+                            <td class="p-3 border border-slate-700 text-center no-print">
+                                <div class="flex justify-center items-center gap-2">
+                                    <input type="number" id="wh_deduct_${item.idx}" min="1" value="1" class="w-16 bg-slate-800 border border-slate-700 px-2 py-1 rounded text-center text-xs text-slate-100">
+                                    <button onclick="decreaseWhQty(${item.idx})" class="bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1 rounded text-xs">کێم بکە</button>
+                                </div>
+                            </td>
+                            <td class="p-3 border border-slate-700 text-center no-print">
+                                <button onclick="editWhItem(${item.idx})" class="text-blue-400 text-xs mr-2">دەستکاری</button>
+                                <button onclick="deleteWhItem(${item.idx})" class="text-rose-400 text-xs">ژێبرن</button>
+                            </td>
+                        </tr>`;
+                }
+            });
+        }
+
+        function decreaseWhQty(idx) {
+            let val = parseInt(document.getElementById(`wh_deduct_${idx}`).value);
+            let whList = db.warehouse[currentWhSecId];
+            if(!isNaN(val) && val > 0) {
+                if(whList[idx].qty >= val) {
+                    whList[idx].qty -= val;
+                    saveData();
+                    renderWarehouseTable(document.getElementById('whSearchInput').value);
+                } else {
+                    alert('مەقدارێ دیارکری ژ موجودێ مخازنی پترە!');
+                }
+            }
+        }
+
+        function editWhItem(idx) {
+            let whList = db.warehouse[currentWhSecId];
+            let item = whList[idx];
+            let sec = warehouseSections.find(s => s.id === currentWhSecId);
+
+            document.getElementById('whItemName').value = item.name;
+            document.getElementById('whItemQty').value = item.qty;
+            if(sec.hasKilo) {
+                document.getElementById('whItemKilo').value = item.singleKilo !== undefined ? item.singleKilo : 0;
+            }
+            document.getElementById('warehouseEditIndex').value = idx;
+            document.getElementById('warehouseFormTitle').innerText = "✏️ دەستکاری: " + item.name;
+            document.getElementById('whSubmitBtn').innerText = "نووکرن (Update)";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteWhItem(idx) {
+            if(confirm('تە دڤێت ئەڤ مەوادە ب تەمامی ژێبەری؟')) {
+                db.warehouse[currentWhSecId].splice(idx, 1);
+                saveData();
+                renderWarehouseTable(document.getElementById('whSearchInput').value);
+            }
+        }
+
+        function resetWhForm() {
+            document.getElementById('warehouseEditIndex').value = "-1";
+            document.getElementById('whItemName').value = '';
+            document.getElementById('whItemQty').value = '';
+            let sec = warehouseSections.find(s => s.id === currentWhSecId);
+            if(sec.hasKilo) document.getElementById('whItemKilo').value = '0';
+            document.getElementById('warehouseFormTitle').innerText = `مەوادەکێ نوی داخل بکە بۆ ${sec.name}`;
+            document.getElementById('whSubmitBtn').innerText = "مەوادی داخل بکە";
+        }
+    </script>
+</body>
+</html>
