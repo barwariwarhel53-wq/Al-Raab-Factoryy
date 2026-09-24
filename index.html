@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستەمێ رێڤەبرنا مخازنی - هەمی بەش دگەل کیلۆ و دەستکاری</title>
+    <!-- Tailwind CSS بۆ جوانکرنا دیزایینی -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="container mx-auto p-4 max-w-4xl">
+        <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">سیستەمێ رێڤەبرنا مەوادان و مخازنی</h1>
+
+        <!-- سەرپەڕەی بەشان (Tabs Navigation) -->
+        <div id="tabsContainer" class="flex flex-wrap justify-center gap-2 mb-6 bg-white p-3 rounded-lg shadow-md">
+            <!-- بەش ل ڤێرە ب ڕێکا جاڤاسکریپتی دێ هێنە دروستکرن -->
+        </div>
+
+        <!-- تایتل و ناساندنا بەشێ چالاک -->
+        <div id="sectionHeader" class="bg-blue-50 border-r-4 border-blue-600 p-4 rounded-lg mb-6 shadow-sm">
+            <h2 id="sectionTitle" class="text-2xl font-bold text-blue-800">بەشێ: نایلون ملون</h2>
+            <p id="sectionDescription" class="text-gray-600 text-sm mt-1">لێرە تو دشێی پاکێت و مەوادێن ڤی بەشی داخل بکەی.</p>
+        </div>
+
+        <!-- فۆڕما داخلکرنا مەوادی -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 id="formTitle" class="text-xl font-semibold mb-4 text-gray-700">مەوادەکێ نوی داخل بکە</h2>
+            <form id="itemForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <input type="hidden" id="editIndex" value="-1">
+                <div>
+                    <label class="block text-gray-600 mb-1">ناڤێ مەوادی:</label>
+                    <input type="text" id="itemName" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="بۆ نموونە: پاکێت">
+                </div>
+                <div>
+                    <label class="block text-gray-600 mb-1">دانە / بڕ:</label>
+                    <input type="number" id="itemQty" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="بۆ نموونە: 100">
+                </div>
+                <!-- خانه یا کیلۆ (ل هەمی بەشێن نایلۆن و کاغەزان هەیە، تنێ ل کارتۆن نینە) -->
+                <div id="kiloFieldWrapper">
+                    <label class="block text-gray-600 mb-1">کیلۆ بۆ هەر دانەیەکێ (Kg):</label>
+                    <input type="number" step="any" id="itemKilo" value="0" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="بۆ نموونە: 0.5">
+                </div>
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-semibold h-[42px]">مەوادی داخل بکە</button>
+            </form>
+        </div>
+
+        <!-- بەشێ لێگەڕان و فلتەرکرنێ -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex items-center justify-between">
+            <input type="text" id="searchInput" placeholder="لێگەڕان ل دووڤ ناڤێ مەوادی..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+
+        <!-- لیستا مەوادان -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 id="tableTitle" class="text-xl font-semibold mb-4 text-gray-700">لیستا مەوادان</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse">
+                    <thead>
+                        <tr id="tableHeaderRow" class="bg-gray-200 text-gray-700">
+                            <!-- ستونە لێرە ب ڕێکا سکریپتی دەهێنە گوهۆڕین -->
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <!-- مەواد ل ڤێرە دێ هێنە زێدەکرن -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript بۆ کارپێکرنا سیستەمی -->
+    <script>
+        const sections = [
+            { id: 'nylon_malon', name: 'نایلون ملون', color: 'blue', desc: 'لێرە تو دشێی مەوادێن نایلون ملون داخل بکەی.', hasKilo: true },
+            { id: 'nylon_transparent', name: 'نایلون شفاف', color: 'emerald', desc: 'لێرە تو دشێی مەوادێن نایلون شفاف داخل بکەی.', hasKilo: true },
+            { id: 'nylon_mortab', name: 'نایلون مرطب', color: 'purple', desc: 'لێرە تو دشێی مەوادێن نایلون مرطب داخل بکەی.', hasKilo: true },
+            { id: 'nylon_sahb_auto', name: 'نایلون سحب اوتو', color: 'rose', desc: 'لێرە تو دشێی مەوادێن نایلون سحب اوتو داخل بکەی.', hasKilo: true },
+            { id: 'zt_fold', name: 'ورق زت فولد & دسبينسر', color: 'cyan', desc: 'لێرە تو دشێی ورق زت فولد و دسبينسر داخل بکەی.', hasKilo: true },
+            { id: 'nylon_shrink', name: 'نایلون شرينك', color: 'indigo', desc: 'لێرە تو دشێی مەوادێن نایلون شرينك داخل بکەی.', hasKilo: true },
+            { id: 'carton', name: 'کارتۆن', color: 'amber', desc: 'لێرە تو دشێی مەوادێن کارتۆن داخل بکەی.', hasKilo: false }
+        ];
+
+        let currentSectionId = sections[0].id;
+        let items = JSON.parse(localStorage.getItem('warehouse_' + currentSectionId)) || [];
+
+        const tabsContainer = document.getElementById('tabsContainer');
+        const itemForm = document.getElementById('itemForm');
+        const editIndexInput = document.getElementById('editIndex');
+        const itemNameInput = document.getElementById('itemName');
+        const itemQtyInput = document.getElementById('itemQty');
+        const itemKiloInput = document.getElementById('itemKilo');
+        const kiloFieldWrapper = document.getElementById('kiloFieldWrapper');
+        const itemsTableBody = document.getElementById('itemsTableBody');
+        const tableHeaderRow = document.getElementById('tableHeaderRow');
+        const searchInput = document.getElementById('searchInput');
+        const sectionHeader = document.getElementById('sectionHeader');
+        const sectionTitle = document.getElementById('sectionTitle');
+        const sectionDescription = document.getElementById('sectionDescription');
+        const formTitle = document.getElementById('formTitle');
+        const tableTitle = document.getElementById('tableTitle');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function renderTabs() {
+            tabsContainer.innerHTML = '';
+            sections.forEach(sec => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isActive = sec.id === currentSectionId;
+                
+                if (isActive) {
+                    btn.className = `px-4 py-2 rounded-lg font-semibold shadow text-sm bg-${sec.color}-600 text-white`;
+                } else {
+                    btn.className = `px-4 py-2 rounded-lg font-medium text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition`;
+                }
+                
+                btn.innerText = sec.name;
+                btn.onclick = () => switchSection(sec.id);
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        function switchSection(sectionId) {
+            currentSectionId = sectionId;
+            searchInput.value = '';
+            resetForm();
+            items = JSON.parse(localStorage.getItem('warehouse_' + currentSectionId)) || [];
+            
+            const currentSec = sections.find(s => s.id === sectionId);
+            
+            if (currentSec.hasKilo) {
+                kiloFieldWrapper.style.display = 'block';
+                itemForm.className = "grid grid-cols-1 md:grid-cols-4 gap-4 items-end";
+            } else {
+                kiloFieldWrapper.style.display = 'none';
+                itemForm.className = "grid grid-cols-1 md:grid-cols-3 gap-4 items-end";
+            }
+            
+            sectionHeader.className = `bg-${currentSec.color}-50 border-r-4 border-${currentSec.color}-600 p-4 rounded-lg mb-6 shadow-sm`;
+            sectionTitle.className = `text-2xl font-bold text-${currentSec.color}-800`;
+            sectionTitle.innerText = `بەشێ: ${currentSec.name}`;
+            sectionDescription.innerText = currentSec.desc;
+            formTitle.innerText = `مەوادەکێ نوی داخل بکە بۆ ${currentSec.name}`;
+            tableTitle.innerText = `لیستا مەوادێن ${currentSec.name}`;
+            submitBtn.className = `w-full bg-${currentSec.color}-600 text-white py-2 px-4 rounded-lg hover:bg-${currentSec.color}-700 transition font-semibold h-[42px]`;
+
+            if (currentSec.hasKilo) {
+                tableHeaderRow.innerHTML = `
+                    <th class="p-3 border">ناڤێ مەوادی</th>
+                    <th class="p-3 border">دانە / بڕ</th>
+                    <th class="p-3 border">مجموعێ کیلۆیان (Kg)</th>
+                    <th class="p-3 border text-center">کێمکرنا برڕی</th>
+                    <th class="p-3 border text-center">کردار</th>
+                `;
+            } else {
+                tableHeaderRow.innerHTML = `
+                    <th class="p-3 border">ناڤێ مەوادی</th>
+                    <th class="p-3 border">دانە / بڕ</th>
+                    <th class="p-3 border text-center">کێمکرنا برڕی</th>
+                    <th class="p-3 border text-center">کردار</th>
+                `;
+            }
+
+            renderTabs();
+            renderTable();
+        }
+
+        function renderTable(filterText = '') {
+            itemsTableBody.innerHTML = '';
+            const currentSec = sections.find(s => s.id === currentSectionId);
+            
+            const filteredItems = items.filter(item => 
+                item.name.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            if (filteredItems.length === 0) {
+                const colSpan = currentSec.hasKilo ? 5 : 4;
+                itemsTableBody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center p-4 text-gray-500">هیچ مەوادەک نەهاتە دیتن</td></tr>`;
+                return;
+            }
+
+            filteredItems.slice().reverse().forEach((item) => {
+                const originalIndex = items.findIndex(i => i === item);
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                
+                const qtyColor = item.qty <= 5 ? 'text-red-600 font-bold' : 'text-gray-800';
+
+                if (currentSec.hasKilo) {
+                    const singleKilo = item.singleKilo !== undefined ? item.singleKilo : 0;
+                    const totalKilo = (item.qty * singleKilo).toFixed(2);
+
+                    row.innerHTML = `
+                        <td class="p-3 border font-medium">${item.name}</td>
+                        <td class="p-3 border ${qtyColor}">${item.qty} دانە</td>
+                        <td class="p-3 border text-indigo-700 font-semibold">${totalKilo} Kg</td>
+                        <td class="p-3 border text-center">
+                            <div class="flex justify-center items-center gap-2">
+                                <input type="number" id="deduct_${originalIndex}" min="1" value="1" class="w-16 px-2 py-1 border rounded text-center text-sm">
+                                <button type="button" onclick="decreaseQty(${originalIndex})" class="bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition text-sm font-semibold">کێم بکە</button>
+                            </div>
+                        </td>
+                        <td class="p-3 border text-center">
+                            <div class="flex justify-center items-center gap-1">
+                                <button type="button" onclick="editItem(${originalIndex})" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition text-xs">دەستکاری</button>
+                                <button type="button" onclick="deleteItem(${originalIndex})" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition text-xs">ژێبرن</button>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td class="p-3 border font-medium">${item.name}</td>
+                        <td class="p-3 border ${qtyColor}">${item.qty} دانە</td>
+                        <td class="p-3 border text-center">
+                            <div class="flex justify-center items-center gap-2">
+                                <input type="number" id="deduct_${originalIndex}" min="1" value="1" class="w-16 px-2 py-1 border rounded text-center text-sm">
+                                <button type="button" onclick="decreaseQty(${originalIndex})" class="bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition text-sm font-semibold">کێم بکە</button>
+                            </div>
+                        </td>
+                        <td class="p-3 border text-center">
+                            <div class="flex justify-center items-center gap-1">
+                                <button type="button" onclick="editItem(${originalIndex})" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition text-xs">دەستکاری</button>
+                                <button type="button" onclick="deleteItem(${originalIndex})" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition text-xs">ژێبرن</button>
+                            </div>
+                        </td>
+                    `;
+                }
+                itemsTableBody.appendChild(row);
+            });
+        }
+
+        itemForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = itemNameInput.value.trim();
+            const qty = parseInt(itemQtyInput.value);
+            const currentSec = sections.find(s => s.id === currentSectionId);
+            const kilo = currentSec.hasKilo ? parseFloat(itemKiloInput.value) || 0 : 0;
+            const editIdx = parseInt(editIndexInput.value);
+
+            if (name && !isNaN(qty)) {
+                if (editIdx > -1) {
+                    items[editIdx].name = name;
+                    items[editIdx].qty = qty;
+                    if (currentSec.hasKilo) {
+                        items[editIdx].singleKilo = kilo;
+                    }
+                    resetForm();
+                } else {
+                    const existingItem = items.find(item => item.name.toLowerCase() === name.toLowerCase());
+                    if (existingItem) {
+                        existingItem.qty += qty;
+                        if (currentSec.hasKilo && kilo > 0) {
+                            existingItem.singleKilo = kilo;
+                        }
+                    } else {
+                        if (currentSec.hasKilo) {
+                            items.push({ name, qty, singleKilo: kilo });
+                        } else {
+                            items.push({ name, qty });
+                        }
+                    }
+                    itemNameInput.value = '';
+                    itemQtyInput.value = '';
+                    if (currentSec.hasKilo) itemKiloInput.value = '0';
+                }
+                saveAndRender();
+            }
+        });
+
+        window.editItem = function(index) {
+            const item = items[index];
+            const currentSec = sections.find(s => s.id === currentSectionId);
+            
+            itemNameInput.value = item.name;
+            itemQtyInput.value = item.qty;
+            if (currentSec.hasKilo) {
+                itemKiloInput.value = item.singleKilo !== undefined ? item.singleKilo : 0;
+            }
+            editIndexInput.value = index;
+            formTitle.innerText = "دەستکاریکرنا مەوادی: " + item.name;
+            submitBtn.innerText = "نووکرنا مەوادی (Update)";
+            submitBtn.className = submitBtn.className.replace(/bg-\w+-600/, 'bg-emerald-600 hover:bg-emerald-700');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            editIndexInput.value = "-1";
+            itemNameInput.value = '';
+            itemQtyInput.value = '';
+            if (sections.find(s => s.id === currentSectionId).hasKilo) {
+                itemKiloInput.value = '0';
+            }
+            const currentSec = sections.find(s => s.id === currentSectionId);
+            formTitle.innerText = `مەوادەکێ نوی داخل بکە بۆ ${currentSec.name}`;
+            submitBtn.innerText = "مەوادی داخل بکە";
+            submitBtn.className = `w-full bg-${currentSec.color}-600 text-white py-2 px-4 rounded-lg hover:bg-${currentSec.color}-700 transition font-semibold h-[42px]`;
+        }
+
+        window.decreaseQty = function(index) {
+            const deductInput = document.getElementById(`deduct_${index}`);
+            const deductVal = parseInt(deductInput.value);
+
+            if (!isNaN(deductVal) && deductVal > 0) {
+                if (items[index].qty >= deductVal) {
+                    items[index].qty -= deductVal;
+                    saveAndRender();
+                } else {
+                    alert('بۆروریا لێبورینێ، بڕێ دیارکری ژ بڕێ موجود د مخازنی مەزنترە!');
+                }
+            }
+        }
+
+        window.deleteItem = function(index) {
+            if (confirm('تە دڤێت ئەڤ مەوادە ب تەمامی ژ لیستێ دەرخەی؟')) {
+                items.splice(index, 1);
+                if (parseInt(editIndexInput.value) === index) {
+                    resetForm();
+                }
+                saveAndRender();
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('warehouse_' + currentSectionId, JSON.stringify(items));
+            renderTable(searchInput.value);
+        }
+
+        searchInput.addEventListener('input', function(e) {
+            renderTable(e.target.value);
+        });
+
+        switchSection(sections[0].id);
+    </script>
+
+</body>
+</html>
